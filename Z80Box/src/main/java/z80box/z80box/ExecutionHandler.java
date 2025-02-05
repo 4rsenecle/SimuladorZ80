@@ -419,19 +419,30 @@ public class ExecutionHandler {
                 registers.A = parametros[0]; // Cargar valor en A
                 instructionDisplay.setText("LD A, " + registers.A);
                 break;
+            case "32": // LD A, (N lugar de memoria)
+                parametros = decodificarParametros();
+                row = parametros[0]/16;
+                column = parametros[0]%16;
+                Z80App.memoria.m[row][column] = Integer.toHexString(registers.A);
+                if(Z80App.memoria.m[row][column].length() == 1){
+                    Z80App.memoria.m[row][column] = "0" + Z80App.memoria.m[row][column];
+                }
+                instructionDisplay.setText("LD A, (" + parametros[0] + ")");
+                break;
             case "BF": // CP A, N
                 parametros = decodificarParametros();
                 res = registers.A - parametros[0];
-                if ( res < 0){
-                    registers.setFlagSign(true);
-                }
-                if ( res == 0){
-                    registers.setFlagZero(true);
-                }
-                if (res > 0){
-                    registers.setPositiveFlag(true);
-                }
-                instructionDisplay.setText("CP A, " + res);
+                registers.setFlagSign(res < 0);
+                registers.setFlagZero(res == 0);
+                registers.setPositiveFlag(res > 0);
+                instructionDisplay.setText("CP A, " + parametros[0]);
+                break;
+            case "B8": // CP B
+                res = registers.A - registers.B;
+                registers.setFlagSign(res < 0);
+                registers.setFlagZero(res == 0);
+                registers.setPositiveFlag(res > 0);
+                instructionDisplay.setText("CP B ");
                 break;
             case "4F": // LD C, A (inmediato de 8 bits)
                 registers.C = registers.A; // Cargar valor en A
@@ -439,6 +450,10 @@ public class ExecutionHandler {
                 break;
             case "0D": // DEC C
                 registers.C--;
+                res = registers.C;
+                registers.setFlagSign(res < 0);
+                registers.setFlagZero(res == 0);
+                registers.setPositiveFlag(res > 0);
                 instructionDisplay.setText("DEC C");
                 break;
             case "51": // LD D, C (inmediato de 8 bits)
@@ -478,6 +493,10 @@ public class ExecutionHandler {
             case "79": // LD A, C (inmediato de 8 bits)
                 registers.A = registers.C; // Cargar valor en A
                 instructionDisplay.setText("LD A, C");
+                break;
+            case "47": // LD B, A (inmediato de 8 bits)
+                registers.B =  registers.A; // Cargar valor en A
+                instructionDisplay.setText("LD B, A");
                 break;
             case "FA": // JP M, nn (salto si flag S está establecido)
                 parametros = decodificarParametrosEsp(); // Dirección de 16 bits
@@ -537,7 +556,7 @@ public class ExecutionHandler {
                 row = Registers.PC/16;
                 column = Registers.PC%16;
                 res = registers.A - Integer.parseInt(Z80App.memoria.m[row][column]);
-                instructionDisplay.setText("CP " + String.valueOf(res));
+                instructionDisplay.setText("CP " + Integer.parseInt(Z80App.memoria.m[row][column]));
                 registers.setFlagSign(res < 0);
                 registers.setFlagZero(res == 0);
                 registers.setPositiveFlag(res > 0);
@@ -741,7 +760,7 @@ public class ExecutionHandler {
                 break;
             case "82":
                 registers.A += registers.D;
-                System.out.println("OPERACIÓN HECHA, ADD A, D");
+                instructionDisplay.setText("ADD A, D");
                 break;
             case "83":
                 registers.A += registers.E;
@@ -1134,13 +1153,18 @@ public class ExecutionHandler {
                 instructionDisplay.setText("LD C, B");
                 break;
             case "57": // LD D, A (inmediato de 8 bits)
-                registers.D = registers.A; // Cargar valor en A
+                registers.D = registers.A; // Cargar valor en D
                 instructionDisplay.setText("LD D, A");
                 break;
             case "62": // LD H, D (inmediato de 8 bits)
-                registers.H = registers.D; // Cargar valor en A
+                registers.H = registers.D; // Cargar valor en H
                 instructionDisplay.setText("LD H, D");
                 break;
+            case "50": // LD D, B
+                registers.D = registers.B; // Cargar valor en D
+                instructionDisplay.setText("LD D, B");
+                break;
+
             case "EB": // EX DE, HL
                 int temp = registers.D;
                 int temp2 = registers.E;
